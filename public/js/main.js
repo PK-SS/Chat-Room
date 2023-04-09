@@ -3,13 +3,16 @@ const chatMessages = document.querySelector(".chat-messages");
 const leaveButton = document.getElementById("leave-btn");
 const roomName = document.getElementById("room-name");
 const userList = document.getElementById("users");
-const socket = io();
 
+const socket = io();
 const { username, room } = Qs.parse(window.location.search, {
   ignoreQueryPrefix: true,
 });
 
 socket.emit("joinRoom", { username: username, room: room });
+socket.on("loadChats", (chatArray) => {
+  loadMessages(chatArray);
+});
 socket.on("message", (message) => {
   outputMessage(message);
   chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -23,7 +26,7 @@ function outputRoomName(room) {
 }
 function outputUsers(users) {
   userList.innerHTML = `
-  ${users.map((user) => `<li>${user.username}</li>`).join("")}`;
+  ${users.map((user) => `<li>${user.name}</li>`).join("")}`;
 }
 
 chatForm.addEventListener("submit", (e) => {
@@ -43,7 +46,19 @@ ${msg.text}
 `;
   document.querySelector(".chat-messages").appendChild(div);
 }
-// function leaveButtonHandler() {
-//   socket.emit("disconnect");
-// }
-// leaveButton.addEventListener("click", leaveButtonHandler);
+function loadMessages(chatArray) {
+  chatArray.forEach((msg) => {
+    const div = document.createElement("div");
+    div.classList.add("message");
+    div.innerHTML = `<p class="meta">${msg.username}<span>${msg.time}</span></p>
+<p class="text">
+${msg.text}
+</p>
+`;
+    document.querySelector(".chat-messages").appendChild(div);
+  });
+}
+function leaveButtonHandler() {
+  socket.disconnect();
+}
+leaveButton.addEventListener("click", leaveButtonHandler);

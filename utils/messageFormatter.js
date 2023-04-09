@@ -1,9 +1,9 @@
-const moment = require("moment");
-function messageFormatter(username, text) {
+import moment from "moment";
+const messageFormatter = (username, text) => {
   return {
     username,
     text,
     time: moment().format("h:mm a"),
   };
-}
-module.exports = messageFormatter;
+};
+export default messageFormatter;

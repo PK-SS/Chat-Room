@@ -1,26 +1,39 @@
-const express = require("express");
+import express from "express";
+import connectDatabase from "./services/db.js";
+import chatMessage from "./utils/chatMessage.js";
+connectDatabase();
+import loadChats from "./utils/loadChats.js";
+import http from "http";
 
-const socketIo = require("socket.io");
-const {
+import { Server } from "socket.io";
+
+import {
   userJoin,
   getCurrentUser,
   getRoomUsers,
   userLeave,
-} = require("./utils/users");
-const http = require("http");
+} from "./utils/users.js";
+
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
-const logger = require("./utils/logger.js");
-const messageFormatter = require("./utils/messageFormatter");
+const io = new Server(server);
+
+import logger from "./utils/logger.js";
+import messageFormatter from "./utils/messageFormatter.js";
+
 app.use(express.static("public"));
 const bot = "chat_BOT";
-io.on("connection", (socket) => {
+
+let user;
+io.on("connection", async (socket) => {
   logger.info("New WebSocket Connection ....");
-  socket.on("joinRoom", ({ username, room }) => {
-    const user = userJoin(socket.id, username, room);
+  socket.on("joinRoom", async ({ username, room }) => {
+    user = await userJoin(socket.id, username, room);
+
     socket.join(user.room);
-    socket.emit("message", messageFormatter(bot, `welcome to chatcord`));
+
+    socket.emit("loadChats", await loadChats(user.roomId));
+
     socket.broadcast
       .to(user.room)
       .emit(
@@ -29,25 +42,27 @@ io.on("connection", (socket) => {
       );
     io.to(user.room).emit("roomUsers", {
       room: user.room,
-      users: getRoomUsers(user.room),
+      users: await getRoomUsers(user.roomId),
     });
   });
-  socket.on("disconnect", () => {
-    const user = userLeave(socket.id);
-    if (user) {
-      io.to(user.room).emit(
-        "message",
-        messageFormatter(bot, `${user.username} has left the chat`)
-      );
-      io.to(user.room).emit("roomUsers", {
-        room: user.room,
-        users: getRoomUsers(user.room),
-      });
-    }
+  socket.on("disconnect", async () => {
+    const user = await userLeave(socket.id);
+    io.to(user.room).emit(
+      "message",
+      messageFormatter(bot, `${user.username} has left the chat`)
+    );
+    io.to(user.room).emit("roomUsers", {
+      room: user.room,
+      users: await getRoomUsers(user.roomId),
+    });
   });
-  socket.on("chatMessage", (msg) => {
+  socket.on("chatMessage", async (msg) => {
     const user = getCurrentUser(socket.id);
-    io.to(user.room).emit("message", messageFormatter(user.username, msg));
+
+    io.to(user.room).emit(
+      "message",
+      await chatMessage(user.roomId, user.username, msg)
+    );
   });
 });
 
