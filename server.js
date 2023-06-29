@@ -1,6 +1,8 @@
 import express from "express";
 import connectDatabase from "./services/db.js";
 import chatMessage from "./utils/chatMessage.js";
+import dotenv from "dotenv";
+dotenv.config();
 connectDatabase();
 import loadChats from "./utils/loadChats.js";
 import http from "http";
@@ -18,7 +20,6 @@ import messageFormatter from "./utils/messageFormatter.js";
 
 app.use(express.static("public"));
 const bot = "chat_BOT";
-
 let user;
 io.on("connection", async (socket) => {
 	logger.info("New WebSocket Connection ....");
