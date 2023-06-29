@@ -7,7 +7,7 @@ MONGO_URI = "PASTE YOUR MONGODB URI"
 PORT = "SPECIFY PORT(default 8080) WHERE YOUY WANT TO RUN WITH."
 
 ```
-
+### Running the server.
 1. Install the packages.
 
 ```
