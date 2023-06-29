@@ -1,6 +1,6 @@
 To start the project in your local machine, follow these steps.
 
-# Adding Credentials in `.env` file.
+### Adding Credentials in `.env` file.
 
 ```
 MONGO_URI = "PASTE YOUR MONGODB URI"
